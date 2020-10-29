@@ -1,5 +1,8 @@
 import ipaddress
 import random
+import platform
+import subprocess
+
 def generateIPDS(IP_CONFIGURATION):
     #IP_CONFIGURATION is expected to be a row of poolNetworkAddress,networkAddress,defaultGateway,interfaceName
                                                 #10.0.0.0/10,10.0.0.0/8,10.255.255.254,eth0

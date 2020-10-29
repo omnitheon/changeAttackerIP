@@ -78,7 +78,7 @@ def changeIP(IPDS, debug):
         outfile.write("update add badguy.redteam.ccdc.core 86400 a {}\n".format(usable))
         outfile.write("send".format(usable))
         outfile.close()
-        cmd = '/usr/bin/nsupdate -v {}temp.txt'.format(os.getcwd())
+        cmd = '/usr/bin/nsupdate -v {}/temp.txt'.format(os.getcwd())
 
         print(cmd)  if debug==True else ''
         p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)

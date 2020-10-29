@@ -79,22 +79,11 @@ def changeIP(IPDS, debug):
         outfile.write("send\n".format(usable))
         outfile.close()
 
-        outfile = open("script.sh","w")
-        outfile.write("#!/bin/sh\n")
-        outfile.write("nsupdate -v {}/temp.txt\n".format(os.getcwd()))
-        outfile.close()
-        cmd = 'chmod +x script.sh'
-
         print(cmd)  if debug==True else ''
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-        cmd = './script.sh'
-
-        print(cmd)  if debug==True else ''
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-
-        print("[{}] Successfully changed IP to {}. . .".format(currT(),usable))  if debug==True else ''
+        cmd = "nsupdate -v {}/temp.txt\n".format(os.getcwd())
+        os.system(cmd)
+    
+        print("Successfully changed IP to {}. . .".format(usable))  if debug==True else ''
         print("\tNext SourceIP: {}".format(usable))
 
 IP_RAW = open('ip_configuration.txt', 'r')

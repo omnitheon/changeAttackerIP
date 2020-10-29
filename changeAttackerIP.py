@@ -75,7 +75,7 @@ def changeIP(IPDS, debug):
 
         outfile = open("temp.txt","w")
         outfile.write("update delete badguy.redteam.ccdc.core\n")
-        outfile.write("update add badguy.redteam.ccdc.core 360 a {}\n".format(usable))
+        outfile.write("update add badguy.redteam.ccdc.core 60 a {}\n".format(usable))
         outfile.write("send\n".format(usable))
         outfile.close()
 

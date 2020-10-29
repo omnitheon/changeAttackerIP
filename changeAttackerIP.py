@@ -1,3 +1,5 @@
+import ipaddress
+import random
 def generateIPDS(IP_CONFIGURATION):
     #IP_CONFIGURATION is expected to be a row of poolNetworkAddress,networkAddress,defaultGateway,interfaceName
                                                 #10.0.0.0/10,10.0.0.0/8,10.255.255.254,eth0
@@ -78,7 +80,8 @@ def changeIP(IPDS, debug):
         out = p.communicate()
 
         print("[{}] Successfully changed IP to {}. . .".format(currT(),usable))  if debug==True else ''
-        return "\tNext SourceIP: {}".format(usable)
+        print("\tNext SourceIP: {}".format(usable))
 
 IP_RAW = open('ip_configuration.txt', 'r')
 IP_DS = generateIPDS(IP_RAW.read().strip("\n"))
+changeIP(IP_DS,True)

@@ -3,6 +3,7 @@ import random
 import platform
 import subprocess
 import os
+import time
 
 def generateIPDS(IP_CONFIGURATION):
     #IP_CONFIGURATION is expected to be a row of poolNetworkAddress,networkAddress,defaultGateway,interfaceName
@@ -21,6 +22,11 @@ def generateIPDS(IP_CONFIGURATION):
             "pool_address_objects":pool_address_objects, "network_address_object":network_address_object,
             "network_broadcast_address":network_broadcast_address, "network_subnet_mask":network_subnet_mask}
 
+def execute(cmd):
+    print(cmd)  
+    p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    out = p.communicate()
+
 def changeIP(IPDS, debug):
     debug = False #Works on linux
     Available = IPDS["pool_address_objects"]
@@ -29,62 +35,23 @@ def changeIP(IPDS, debug):
     networkAddress = IPDS["networkAddress"]
     networkSubnetMask = IPDS["network_subnet_mask"]
     networkBoardcast = IPDS["network_broadcast_address"]
-    print("{} available IPs".format(len(Available))) if debug==True else ''
     usable = random.choice(Available)
-    print("Checking if {} is in use. . .".format(usable))  if debug==True else ''
-    if platform.system() == "Windows":
-        cmd = "ping -w 1 -n 1 {}".format(usable)
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-    else:
-        cmd = "/usr/bin/ping -i 0.3 -c 1 {}".format(usable).split(" ")
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-    
-    stdOUT = out[0].decode("utf-8")
-    while (platform.system() == "Windows" and "Reply from {}".format(usable) in stdOUT) or (platform.system() == "Linux" and "64 bytes from {}".format(usable) in stdOUT):
-        print("Previously selected IP was in use...trying again.")   if debug==True else ''
-        usable = random.choice(Available)
-        print("Checking if {} is in use. . .".format(usable))  if debug==True else ''
-        if platform.system() == "Windows":
-            cmd = "ping -w 1 -n 1 {}".format(usable)
-            p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-            out = p.communicate()
-        else:
-            cmd = "/usr/bin/ping -i 0.3 -c 1 {}".format(usable).split(" ")
-            p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-            out = p.communicate()
-        stdOUT = out[0].decode("utf-8")
-    else:
-        cmd = "/usr/sbin/ip route del default".split(" ")
-        print(cmd)  if debug==True else ''
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-        cmd = "/usr/sbin/ifconfig {} {} netmask {} broadcast {}".format(interfaceName,usable,networkSubnetMask,networkBoardcast).split(" ")
-        print(cmd)  if debug==True else ''
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-        cmd = "/usr/sbin/ip route add {} dev {}".format(networkAddress,interfaceName).split(" ")
-        print(cmd)  if debug==True else ''
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
-        cmd = "/usr/sbin/ip route add default via {} dev {}".format(defaultGateway,interfaceName).split(" ")
-        print(cmd)  if debug==True else ''
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        out = p.communicate()
+    execute("/usr/sbin/ip route del default".split(" "))
+    execute("/usr/sbin/ifconfig {} {} netmask {} broadcast {}".format(interfaceName,usable,networkSubnetMask,networkBoardcast).split(" "))
+    execute("/usr/sbin/ip route add {} dev {}".format(networkAddress,interfaceName).split(" "))
+    execute("/usr/sbin/ip route add default via {} dev {}".format(defaultGateway,interfaceName).split(" "))
 
-        outfile = open("temp.txt","w")
-        outfile.write("update delete badguy.redteam.ccdc.core\n")
-        outfile.write("update add badguy.redteam.ccdc.core 60 a {}\n".format(usable))
-        outfile.write("send\n".format(usable))
-        outfile.close()
+    outfile = open("temp.txt","w")
+    outfile.write("update delete badguy.redteam.ccdc.core\n")
+    outfile.write("update add badguy.redteam.ccdc.core 4 a {}\n".format(usable))
+    outfile.write("send\n")
+    outfile.close()
+    print("Successfully changed IP to {}. . .".format(usable))  
+    print("\tNext SourceIP: {}".format(usable))
 
-        print(cmd)  if debug==True else ''
-        cmd = "nsupdate -v {}/temp.txt\n".format(os.getcwd())
-        os.system(cmd)
-    
-        print("Successfully changed IP to {}. . .".format(usable))  if debug==True else ''
-        print("\tNext SourceIP: {}".format(usable))
+    while True:
+        os.system("nsupdate -v {}/temp.txt\n".format(os.getcwd()))
+        time.sleep(1)
 
 IP_RAW = open('ip_configuration.txt', 'r')
 IP_DS = generateIPDS(IP_RAW.read().strip("\n"))
